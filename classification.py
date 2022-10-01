@@ -1,6 +1,9 @@
 
+import matplotlib.pyplot as plt
+import scipy.stats as stats
 import numpy as np
 import pandas as pd
+import seaborn as sns
 
 
 def basicStatistics(data):
@@ -28,11 +31,13 @@ def svd(data):
 
 def varianceExplained(S):
     """Return the variance explained by the principal components."""
+
     return S**2 / ((S**2).sum())
 
 
 def plotVarianceExplained(rho):
     """Plot the variance explained by the principal components."""
+    print(np.cumsum(rho))
     threshold = 0.9
     import matplotlib.pyplot as plt
     plt.figure()
@@ -60,7 +65,7 @@ def plotPCA(m, n, data, classNames):
     C = len(classNames)
     plt.figure()
     for c in range(C):
-        class_mask = data[:, -1] == c
+        class_mask = data[:, -3] > 44 if c == 0 else data[:, -3] < 44
         plt.plot(Z[class_mask, m-1], Z[class_mask, n-1], 'o', alpha=.5)
     plt.legend(['Absent', 'Present'])
     plt.xlabel('PC{0}'.format(n))
@@ -78,14 +83,24 @@ def boxplot(data, attributes):
 
 def histogram(data, attributes):
     """Plot histograms of the data."""
-    import matplotlib.pyplot as plt
+    # import matplotlib.pyplot as plt
+    # data = np.array(data)
+    # fig = plt.figure()
+    # fig.subplots_adjust(hspace=.4)
+    # for i in range(len(attributes)):
+    #     plt.subplot(4, 3, i+1)
+    #     plt.hist(data[:, i], bins=20)
+    #     plt.title(attributes[i])
+    # plt.show()
 
-    fig = plt.figure()
-    fig.subplots_adjust(hspace=.4)
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+
+    fig, axes = plt.subplots(2, 5, figsize=(12, 12))
     for i in range(len(attributes)):
-        plt.subplot(4, 3, i+1)
-        plt.hist(data[:, i], bins=20)
-        plt.title(attributes[i])
+        sns.histplot(data, x=attributes[i], ax=axes[i//5, i % 5], kde=True)
+    # vertical spacing
+    fig.tight_layout(h_pad=2)
     plt.show()
 
 # TODO
@@ -99,7 +114,8 @@ def pairPlot(data):
     data = excludeBinary(data)
 
     sns.set(style='ticks', color_codes=True)
-    sns.pairplot(data, vars=data.columns[data.columns != 'chd'], hue='chd')
+    sns.pairplot(
+        data, vars=data.columns[data.columns != 'chd'], corner=True, diag_kind='kde')
     plt.show()
 
 
@@ -110,6 +126,7 @@ def correlationMatrix(data):
     data = excludeBinary(data)
     sns.set(style='ticks', color_codes=True)
     sns.heatmap(data.corr(), annot=True)
+    print(data.corr()[np.logical_and(data.corr() >= 0.4, data.corr() <= 0.6)])
     plt.show()
 
 
@@ -145,6 +162,7 @@ def plotThreePCAs(data, i, j, k):
 # plotting coefficients of PCA
 def plotCoefficients(V, attributes):
     import matplotlib.pyplot as plt
+
     pcs = [0, 1, 2]
     legendStrs = ['PC'+str(e+1) for e in pcs]
     bw = .2
@@ -155,7 +173,6 @@ def plotCoefficients(V, attributes):
     plt.xlabel('Attributes')
     plt.ylabel('Component coefficients')
     plt.legend(legendStrs)
-    plt.grid()
     plt.title('PCA Component Coefficients')
     plt.show()
 
@@ -182,14 +199,31 @@ data = convertData(data)
 attributes = getAttributes(data)
 classNames = np.unique(data['chd'])
 
+# boxplot(data, attributes)
+# sns.histplot(data, common_bins=False, kde=True, multiple='dodge')
+# sns.boxplot(data)
 
-# boxplot(normalizeData(data), attributes)
-# data['ldl'] = np.log(data['ldl'])
-# histogram(np.array(normalizeData(data)), attributes)
-pairPlot(data)
-# plotPCA(1, 2, np.array(data), classNames)
+# histogram(data, attributes)
+# pairPlot(data)
+# plotPCA(2, 3, np.array(data), classNames)
 # plotVarianceExplained(varianceExplained(svd(np.array(data))[1]))
-# plotThreeAttributes(data, 'sbp', 'tobacco', 'obesity')
+# plotThreeAttributes(data, 'alcohol', 'age', 'sbp')
 # plotThreePCAs(np.array(data), 0, 1, 2)
 # correlationMatrix(data)
 # plotCoefficients(svd(np.array(data))[2], attributes)
+
+
+# qq plot of
+
+
+def qqPlot(data, attribute):
+    import matplotlib.pyplot as plt
+    import scipy.stats as stats
+    data = np.array(data[attribute])
+    plt.figure()
+    stats.probplot(data, dist='norm', plot=plt)
+    plt.show()
+
+
+# qqPlot(data, 'sbp')
+# qqPlot(data, 'typea')
