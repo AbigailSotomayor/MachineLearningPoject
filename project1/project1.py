@@ -1,4 +1,5 @@
 
+from cProfile import label
 import matplotlib.pyplot as plt
 import scipy.stats as stats
 import numpy as np
@@ -15,7 +16,7 @@ def basicStatistics(data):
 
 
 def normalizeData(data):
-    """Normalize the data to zero mean and unit variance."""
+    """Normalize the data to zero mean."""
     mean, _, std = basicStatistics(data)
     return (data - mean)/std
 
@@ -25,13 +26,12 @@ def svd(data):
     Y = data - np.ones((len(data), 1)) * np.mean(data,
                                                  axis=0)
     U, S, Vh = np.linalg.svd(Y, full_matrices=False)
-    V = Vh.T
+    V = Vh.T  # transpose
     return U, S, V
 
 
 def varianceExplained(S):
     """Return the variance explained by the principal components."""
-
     return S**2 / ((S**2).sum())
 
 
@@ -65,9 +65,9 @@ def plotPCA(m, n, data, classNames):
     C = len(classNames)
     plt.figure()
     for c in range(C):
-        class_mask = data[:, -3] > 44 if c == 0 else data[:, -3] < 44
-        plt.plot(Z[class_mask, m-1], Z[class_mask, n-1], 'o', alpha=.5)
-    plt.legend(['Absent', 'Present'])
+        class_mask = data[:, -1] == c  # mask for chd = 0 or 1
+        plt.plot(Z[class_mask, m-1], Z[class_mask, n-1], 'x')
+    plt.legend(['sbp >= 160', 'sbp < 160'])
     plt.xlabel('PC{0}'.format(n))
     plt.ylabel('PC{0}'.format(m))
     plt.show()
@@ -83,16 +83,6 @@ def boxplot(data, attributes):
 
 def histogram(data, attributes):
     """Plot histograms of the data."""
-    # import matplotlib.pyplot as plt
-    # data = np.array(data)
-    # fig = plt.figure()
-    # fig.subplots_adjust(hspace=.4)
-    # for i in range(len(attributes)):
-    #     plt.subplot(4, 3, i+1)
-    #     plt.hist(data[:, i], bins=20)
-    #     plt.title(attributes[i])
-    # plt.show()
-
     import matplotlib.pyplot as plt
     import seaborn as sns
 
@@ -102,8 +92,6 @@ def histogram(data, attributes):
     # vertical spacing
     fig.tight_layout(h_pad=2)
     plt.show()
-
-# TODO
 
 
 def pairPlot(data):
@@ -126,7 +114,6 @@ def correlationMatrix(data):
     data = excludeBinary(data)
     sns.set(style='ticks', color_codes=True)
     sns.heatmap(data.corr(), annot=True)
-    print(data.corr()[np.logical_and(data.corr() >= 0.4, data.corr() <= 0.6)])
     plt.show()
 
 
@@ -147,15 +134,17 @@ def plotThreeAttributes(data, attr1, attr2, attr3):
 def plotThreePCAs(data, i, j, k):
     """Plot three principal components against each other."""
     import matplotlib.pyplot as plt
-    from mpl_toolkits.mplot3d import Axes3D
-    _, _, V = svd(data)
-    Z = projectData(data, V)
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(Z[:, i], Z[:, j], Z[:, k])
-    ax.set_xlabel('PC{0}'.format(i+1))
-    ax.set_ylabel('PC{0}'.format(j+1))
-    ax.set_zlabel('PC{0}'.format(k+1))
+    _, _, V = svd(np.array(data))
+    Z = projectData(np.array(data), V)
+    ax = plt.axes(projection='3d')
+    ax.scatter3D(Z[data['chd'] == 0, i-1], Z[data['chd'] == 0,
+                 j-1], Z[data['chd'] == 0, k-1], label='No CHD', marker='x')
+    ax.scatter3D(Z[data['chd'] == 1, i-1], Z[data['chd'] == 1,
+                 j-1], Z[data['chd'] == 1, k-1], label='CHD', marker='x')
+    ax.set_xlabel('PC{0}'.format(i))
+    ax.set_ylabel('PC{0}'.format(j))
+    ax.set_zlabel('PC{0}'.format(k))
+    ax.legend()
     plt.show()
 
 
@@ -191,11 +180,21 @@ def getAttributes(data):
 def excludeBinary(data):
     """Exclude binary attributes."""
     return data.drop(['famhist'], axis=1)
-# DRAFT
+
+
+def qqPlot(data, attribute):
+    """Plot a qq-plot of a single attribute."""
+    import matplotlib.pyplot as plt
+    import scipy.stats as stats
+    data = np.array(data[attribute])
+    plt.figure()
+    stats.probplot(data, dist='norm', plot=plt)
+    plt.show()
 
 
 data = pd.read_csv('data.csv')
 data = convertData(data)
+data.describe().to_clipboard(index=False)
 attributes = getAttributes(data)
 classNames = np.unique(data['chd'])
 
@@ -205,25 +204,15 @@ classNames = np.unique(data['chd'])
 
 # histogram(data, attributes)
 # pairPlot(data)
-# plotPCA(2, 3, np.array(data), classNames)
+# plotPCA(1, 2, np.array(data), classNames)
 # plotVarianceExplained(varianceExplained(svd(np.array(data))[1]))
 # plotThreeAttributes(data, 'alcohol', 'age', 'sbp')
-# plotThreePCAs(np.array(data), 0, 1, 2)
+# plotThreePCAs(data, 1, 2, 3)
 # correlationMatrix(data)
+
 # plotCoefficients(svd(np.array(data))[2], attributes)
 
 
-# qq plot of
-
-
-def qqPlot(data, attribute):
-    import matplotlib.pyplot as plt
-    import scipy.stats as stats
-    data = np.array(data[attribute])
-    plt.figure()
-    stats.probplot(data, dist='norm', plot=plt)
-    plt.show()
-
-
+# print(svd(np.array(data))[2])
 # qqPlot(data, 'sbp')
 # qqPlot(data, 'typea')
