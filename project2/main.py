@@ -46,7 +46,7 @@ if partARegression:
        show()
 
 ########################################### PART B ##################################################
-RegressionBLambda = False
+RegressionBLambda = True
 if RegressionBLambda == True:    
        # Add offset attribute
        X = np.concatenate((np.ones((X.shape[0],1)),X),1)
@@ -55,7 +55,7 @@ if RegressionBLambda == True:
 
        ## Crossvalidation
        # Create crossvalidation partition for evaluation
-       K = 10
+       K = 2
        CV = model_selection.KFold(K, shuffle=True)
        #CV = model_selection.KFold(K, shuffle=False)
 
@@ -84,7 +84,7 @@ if RegressionBLambda == True:
               y_train = y[train_index]
               X_test = X[test_index]
               y_test = y[test_index]
-              internal_cross_validation = 10    
+              internal_cross_validation = 2
               
               opt_val_err, opt_lambda, mean_w_vs_lambda, train_err_vs_lambda, test_err_vs_lambda = rlr_validate(X_train, y_train, lambdas, internal_cross_validation)
               opt_lambdas.append(opt_lambda)
@@ -129,7 +129,7 @@ if RegressionBLambda == True:
        print("Error in each fold")
        for index,val in enumerate(Error_test_nofeatures):
               print("Fold {0}: {1}".format(index+1,val[0]))
-       print("Mean: " + str(np.mean(Error_test)))
+       print("Mean: " + str(np.mean(Error_test_nofeatures)))
               
        print("Optimal lambda for each fold")
 
@@ -140,7 +140,7 @@ if RegressionBLambda == True:
 
        
 
-TwoLayerANN = True
+TwoLayerANN = False
 if TwoLayerANN:
        # Parameters for neural network classifier
        n_hidden_units = 2      # number of hidden units

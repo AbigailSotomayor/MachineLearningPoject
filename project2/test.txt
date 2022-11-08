@@ -1,0 +1,56 @@
+Summary:
+==================================================================
+Baseline:
+Fold 1: 2.265530466274332
+Fold 2: 2.650254775916704
+Fold 3: 4.131902504725898
+Fold 4: 1.9069689981096412
+Fold 5: 7.863042911153119
+Fold 6: 4.560862759924387
+Fold 7: 4.861659215500945
+Fold 8: 4.507396597353497
+Fold 9: 4.724991115311909
+Fold 10: 3.7776037807183354
+Mean: 4.125021312498877
+==================================================================
+
+==================================================================
+Linear Regression
+Fold 1: Error 2.679286319981285
+Fold 2: Error 2.1212459805773918
+Fold 3: Error 3.5145717976583892
+Fold 4: Error 1.6872326692111488
+Fold 5: Error 7.586150329673959
+Fold 6: Error 4.110037792075755
+Fold 7: Error 4.034461166650152
+Fold 8: Error 3.2733980963864453
+Fold 9: Error 3.766286807365933
+Fold 10: Error 2.7902790062334097
+Mean: 3.556294996581387
+Best Lambdas
+Fold 1: Error 10.0
+Fold 2: Error 100.0
+Fold 3: Error 100.0
+Fold 4: Error 100.0
+Fold 5: Error 100.0
+Fold 6: Error 100.0
+Fold 7: Error 100.0
+Fold 8: Error 100.0
+Fold 9: Error 10.0
+Fold 10: Error 10.0
+Mean: 73.0
+==================================================================
+	
+==================================================================
+Hidden units with corresponding MSE are:
+Best h in the outter fold 1=3 with the generalization error 		2.3431249
+Best h in the outter fold 2=4 with the generalization error 		2.82048
+Best h in the outter fold 3=5 with the generalization error 		4.1319685
+Best h in the outter fold 4=5 with the generalization error 		2.4359329
+Best h in the outter fold 5=4 with the generalization error 		7.0756764
+Best h in the outter fold 6=5 with the generalization error 		4.618669
+Best h in the outter fold 7=2 with the generalization error 		5.417952
+Best h in the outter fold 8=3 with the generalization error 		4.5615454
+Best h in the outter fold 9=3 with the generalization error 		4.725731
+Best h in the outter fold 10=5 with the generalization error 		3.4940083
+==================================================================
