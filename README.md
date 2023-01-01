@@ -1,5 +1,5 @@
 # 02450 Introduction to Machine Learning academic projects
-The 2 projects are elaborated on the South African Heart Disease dataset where different ML concepts were learnd and explored.
+The 2 projects are elaborated on the [South African Heart Disease dataset](https://hastie.su.domains/ElemStatLearn/datasets/SAheart.info.txt) where different ML concepts were learnd and explored.
 In project 1 the following methods for data preparation were used:
 - analysing attributes
 - summary statistics
