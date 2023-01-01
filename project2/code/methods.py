@@ -22,6 +22,7 @@ def normalizeData(data):
     data = (data - mean)/std
     return data
 
+
 def transformData(data):
     """Convert text to numbers."""
     data['famhist'] = data['famhist'].map({'Present': 1, 'Absent': 0})
@@ -33,53 +34,53 @@ def transformData(data):
     attributeNames = data.columns
     return np.array(data), np.array(y), np.array(attributeNames)
 
+
 def BaselineCrossValidation(train_index, test_index, y):
     y_train = y[train_index]
     y_test = y[test_index]
-    Error_test_nofeatures = np.square(y_test-y_test.mean()).sum(axis=0)/y_test.shape[0]
+    Error_test_nofeatures = np.square(
+        y_test-y_test.mean()).sum(axis=0)/y_test.shape[0]
     return Error_test_nofeatures
 
+
 def LinearRegressionCrossValidation(train_index, test_index, X, y, K_inner, lambdas):
-    X = np.concatenate((np.ones((X.shape[0],1)),X),1)
+    X = np.concatenate((np.ones((X.shape[0], 1)), X), 1)
     X_train = X[train_index]
     y_train = y[train_index]
     X_test = X[test_index]
     y_test = y[test_index]
 
-    
-    opt_val_err, opt_lambda, mean_w_vs_lambda, train_err_vs_lambda, test_err_vs_lambda = rlr_validate(X_train, y_train, lambdas, K_inner)
-    
-    mu =  np.mean(X_train[:, 1:], 0)
+    opt_val_err, opt_lambda, mean_w_vs_lambda, train_err_vs_lambda, test_err_vs_lambda = rlr_validate(
+        X_train, y_train, lambdas, K_inner)
+
+    mu = np.mean(X_train[:, 1:], 0)
     sigma = np.std(X_train[:, 1:], 0)
-    X_train[:, 1:] = (X_train[:, 1:] - mu) / sigma 
+    X_train[:, 1:] = (X_train[:, 1:] - mu) / sigma
     X_test[:, 1:] = (X_test[:, 1:] - mu) / sigma
     Xty = X_train.T @ y_train
     XtX = X_train.T @ X_train
     lambdaI = opt_lambda * np.eye(X.shape[1])
     lambdaI[0] = 0
-    w_rlr = np.linalg.solve(XtX+lambdaI,Xty).squeeze()
-    Error_test_rlr = np.square(y_test-X_test @ w_rlr).sum(axis=0)/y_test.shape[0]
-    return  Error_test_rlr, opt_lambda
+    w_rlr = np.linalg.solve(XtX+lambdaI, Xty).squeeze()
+    Error_test_rlr = np.square(
+        y_test-X_test @ w_rlr).sum(axis=0)/y_test.shape[0]
+    return Error_test_rlr, opt_lambda
 
-    
 
 def ANNCrossValidation(train_index, test_index, X, y, hs, K_Inner, K_Outter):
     n_replicates = 1       # number of networks trained in each k-fold
     max_iter = 10000
-    y = y.reshape((X.shape[0],1))
+    y = y.reshape((X.shape[0], 1))
     loss_fn = torch.nn.MSELoss()
     X_train = torch.Tensor(X[train_index, :])
     y_train = torch.Tensor(y[train_index])
     X_test = torch.Tensor(X[test_index, :])
     y_test = torch.Tensor(y[test_index])
 
-
-
-
     CV_inner = model_selection.KFold(K_Inner, shuffle=True, random_state=1234)
     Error_validation_IF = [[] for _ in range(len(hs))]
 
-    for (k, (train_index_IF, test_index_IF)) in enumerate(CV_inner.split(X_train,y_train)):
+    for (k, (train_index_IF, test_index_IF)) in enumerate(CV_inner.split(X_train, y_train)):
         X_train_IF = torch.Tensor(X[train_index_IF, :])
         y_train_IF = torch.Tensor(y[train_index_IF])
         X_test_IF = torch.Tensor(X[test_index_IF, :])
@@ -88,15 +89,15 @@ def ANNCrossValidation(train_index, test_index, X, y, hs, K_Inner, K_Outter):
         for val in hs:
             n_hidden_units = val
             def model(): return torch.nn.Sequential(torch.nn.Linear(
-            X.shape[1], n_hidden_units), torch.nn.Tanh(), torch.nn.Linear(n_hidden_units, 1),)
+                X.shape[1], n_hidden_units), torch.nn.Tanh(), torch.nn.Linear(n_hidden_units, 1),)
             # Train the net on training data
             net, final_loss, learning_curve = train_neural_net(model,
-                                                                loss_fn,
-                                                                X=X_train_IF,
-                                                                y=y_train_IF,
-                                                                n_replicates=n_replicates,
-                                                                max_iter=max_iter)
-            
+                                                               loss_fn,
+                                                               X=X_train_IF,
+                                                               y=y_train_IF,
+                                                               n_replicates=n_replicates,
+                                                               max_iter=max_iter)
+
             y_test_est = net(X_test_IF)
             se = (y_test_est.float() - y_test_IF.float())**2
             mse = (sum(se).type(torch.float)/len(y_test_IF)).data.numpy()
@@ -105,58 +106,62 @@ def ANNCrossValidation(train_index, test_index, X, y, hs, K_Inner, K_Outter):
     for j in range(len(hs)):
         for final_loss in Error_validation_IF[j]:
             generalization_error[j] += final_loss
-        generalization_error[j] *= ((X.shape[0]/K_Outter-(X.shape[0]/(K_Outter*K_Inner)))/(X.shape[0]/K_Outter))*(K_Inner)
+        generalization_error[j] *= ((X.shape[0]/K_Outter-(
+            X.shape[0]/(K_Outter*K_Inner)))/(X.shape[0]/K_Outter))*(K_Inner)
     best_h = np.argmin(generalization_error) + 1
     n_hidden_units = best_h
     def model(): return torch.nn.Sequential(torch.nn.Linear(
-    X.shape[1], n_hidden_units), torch.nn.Tanh(), torch.nn.Linear(n_hidden_units, 1),)
+        X.shape[1], n_hidden_units), torch.nn.Tanh(), torch.nn.Linear(n_hidden_units, 1),)
     # Train the net on training data
     net, final_loss, learning_curve = train_neural_net(model,
-                                                    loss_fn,
-                                                    X=X_train,
-                                                    y=y_train,
-                                                    n_replicates=n_replicates,
-                                                    max_iter=max_iter)
+                                                       loss_fn,
+                                                       X=X_train,
+                                                       y=y_train,
+                                                       n_replicates=n_replicates,
+                                                       max_iter=max_iter)
     y_test_est = net(X_test)
     se = (y_test_est.float() - y_test.float())**2
     mse = (sum(se).type(torch.float)/len(y_test)).data.numpy()
 
     return best_h, mse
 
+
 def LinearRegressionFit(X_train, X_test, y_train, opt_lambda):
-    X_train_LR = np.concatenate((np.ones((X_train.shape[0],1)),X_train),1)
-    X_test_LR = np.concatenate((np.ones((X_test.shape[0],1)),X_test),1)
+    X_train_LR = np.concatenate((np.ones((X_train.shape[0], 1)), X_train), 1)
+    X_test_LR = np.concatenate((np.ones((X_test.shape[0], 1)), X_test), 1)
     lambdaI = opt_lambda * np.eye(X_train_LR.shape[1])
-    lambdaI[0,0] = 0
+    lambdaI[0, 0] = 0
     mu = np.mean(X_train_LR[:, 1:], 0)
-    sigma = np.std(X_train_LR[:, 1:], 0) 
-    X_train_LR[:, 1:] = (X_train_LR[:, 1:] - mu) / sigma 
-    X_test_LR[:, 1:] = (X_test_LR[:, 1:] - mu) / sigma 
+    sigma = np.std(X_train_LR[:, 1:], 0)
+    X_train_LR[:, 1:] = (X_train_LR[:, 1:] - mu) / sigma
+    X_test_LR[:, 1:] = (X_test_LR[:, 1:] - mu) / sigma
     Xty = X_train_LR.T @ y_train
     XtX = X_train_LR.T @ X_train_LR
-    w_rlr = np.linalg.solve(XtX+lambdaI,Xty).squeeze()
+    w_rlr = np.linalg.solve(XtX+lambdaI, Xty).squeeze()
     y_est_test = X_test_LR @ w_rlr
     return y_est_test
+
 
 def ANNFit(X_train, X_test, y_train, y_test, h):
     n_hidden_units = h
     n_replicates = 1
     max_iter = 10000
-    y_train = y_train.reshape((X_train.shape[0],1))
+    y_train = y_train.reshape((X_train.shape[0], 1))
     no_attributes = X_train.shape[1]
     X_train = torch.Tensor(X_train)
     y_train = torch.Tensor(y_train)
     X_test = torch.Tensor(X_test)
     loss_fn = torch.nn.MSELoss()
-    def model(): return torch.nn.Sequential(torch.nn.Linear(no_attributes, n_hidden_units), torch.nn.Tanh(), torch.nn.Linear(n_hidden_units, 1),)
-    
-    net, final_loss, learning_curve = train_neural_net(model,
-                                                        loss_fn,
-                                                        X=X_train,
-                                                        y=y_train,
-                                                        n_replicates=n_replicates,
-                                                        max_iter=max_iter)
-    
-    y_est_test = net(X_test)
-    return (y_est_test).detach().numpy()[0]
 
+    def model(): return torch.nn.Sequential(torch.nn.Linear(no_attributes,
+                                                            n_hidden_units), torch.nn.Tanh(), torch.nn.Linear(n_hidden_units, 1),)
+
+    net, final_loss, learning_curve = train_neural_net(model,
+                                                       loss_fn,
+                                                       X=X_train,
+                                                       y=y_train,
+                                                       n_replicates=n_replicates,
+                                                       max_iter=max_iter)
+
+    y_est_test = net(X_test)
+    return (y_est_test).detach().numpy().reshape(-1)
